@@ -23,7 +23,12 @@ enum ms_type {
 struct ms_client {
 	pthread_t tid;
 	int fd;
+
+	struct ms_handle *parent;
 	struct ms_client *next;
+
+	size_t addrlen;
+	char addr[];
 };
 
 struct ms_handle {
@@ -31,6 +36,8 @@ struct ms_handle {
 
 	void *ctx;
 	ms_callback *callback;
+	int use_threads;
+	int stopping;
 
 	union {
 		int listen_port;
@@ -40,6 +47,7 @@ struct ms_handle {
 	pthread_t listen_tid;
 	int fd;
 
+	pthread_rwlock_t client_lock;
 	struct ms_client *clients;
 };
 

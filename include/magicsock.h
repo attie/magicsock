@@ -6,11 +6,11 @@
 #endif /* EXPORT */
 
 struct ms_handle;
-typedef void(ms_callback)(void *ctx, int fd);
+typedef void(ms_callback)(void *ctx, const char *addr, int fd);
 
-EXPORT struct ms_handle *ms_start_tcp(int port, void *ctx, ms_callback *callback);
-EXPORT struct ms_handle *ms_start_udp(int port, void *ctx, ms_callback *callback);
-EXPORT struct ms_handle *ms_start_named(const char *path, void *ctx, ms_callback *callback);
+EXPORT struct ms_handle *ms_start_tcp(int port, void *ctx, ms_callback *callback, int use_threads);
+EXPORT struct ms_handle *ms_start_udp(int port, void *ctx, ms_callback *callback, int use_threads);
+EXPORT struct ms_handle *ms_start_named(const char *path, void *ctx, ms_callback *callback, int use_threads);
 
 EXPORT int ms_stop(struct ms_handle *socket);
 
