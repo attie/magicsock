@@ -1,0 +1,9 @@
+.*.dir
+.*.swp
+.*.swo
+lib
+obj
+cscope.out
+tags
+test/bin
+test/obj
