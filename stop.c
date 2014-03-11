@@ -32,7 +32,10 @@ int ms_stop(struct ms_handle *socket) {
 	pthread_rwlock_unlock(&socket->client_lock);
 	pthread_rwlock_destroy(&socket->client_lock);
 
-	if (socket->type == MS_TYPE_NAMED) free(socket->listen_path);
+	if (socket->type == MS_TYPE_NAMED) {
+		unlink(socket->listen_path);
+		free(socket->listen_path);
+	}
 	free(socket);
 	return 0;
 }

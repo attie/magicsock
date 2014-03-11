@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -12,8 +13,10 @@ EXPORT struct ms_handle *ms_start_named(const char *path, void *ctx, ms_callback
 	size_t l;
 	struct ms_handle *h;
 	struct sockaddr_un sa;
+	char path2[PATH_MAX];
 
-	if ((l = strlen(path)) >= sizeof(sa.sun_path)) return NULL;
+	realpath(path, path2);
+	if ((l = strlen(path2)) >= sizeof(sa.sun_path)) return NULL;
 
 	if ((h = malloc(sizeof(*h))) == NULL) return NULL;
 	memset(h, 0, sizeof(h));
@@ -21,7 +24,7 @@ EXPORT struct ms_handle *ms_start_named(const char *path, void *ctx, ms_callback
 	h->ctx = ctx;
 	h->callback = callback;
 	h->use_threads = use_threads;
-	h->listen_path = strdup(path);
+	h->listen_path = strdup(path2);
 
 	if (pthread_rwlock_init(&h->client_lock, NULL) != 0) goto die0;
 
