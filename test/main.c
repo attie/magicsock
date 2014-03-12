@@ -23,7 +23,7 @@
 
 #include <magicsock.h>
 
-void my_cb(void *ctx, const char *addr, int fd) {
+void my_cb(struct ms_client *client, void *ctx, const char *addr, int fd) {
 	printf("connection from '%s' on fd %d\n", addr, fd);
 	sleep(2);
 	printf("fd %d finished!\n", fd);

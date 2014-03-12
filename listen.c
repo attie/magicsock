@@ -33,7 +33,7 @@ void *ms_client(struct ms_client *client) {
 
 	socket = client->parent;
 	
-	socket->callback(socket->ctx, client->addr, client->fd);
+	socket->callback(client, socket->ctx, client->addr, client->fd);
 
 	if (socket->use_threads) pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
