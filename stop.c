@@ -38,8 +38,8 @@ int ms_stop(struct ms_handle *socket) {
 
 		if (socket->use_threads) {
 			if (pthread_cancel(c->tid) != 0) {
-				printf("error killing thread %p\n", (void*)c->tid);
-				return -1;
+				printf("magicsock: error killing thread %p\n", (void*)c->tid);
+				continue;
 			}
 		}
 		shutdown(c->fd, SHUT_RDWR);

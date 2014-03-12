@@ -83,7 +83,6 @@ void ms_client_prepare(struct ms_handle *socket, const char *addr, size_t addrle
 }
 
 void *ms_listen(struct ms_handle *socket) {
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 	while (1) {
 		uint8_t buf[2048];
 		size_t buflen;
