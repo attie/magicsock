@@ -27,58 +27,58 @@
 
 #include "internal.h"
 
-void *ms_client(struct ms_client *info) {
+void *ms_client(struct ms_client *client) {
 	struct ms_handle *socket;
 	struct ms_client **c;
 
-	socket = info->parent;
+	socket = client->parent;
 	
-	socket->callback(socket->ctx, info->addr, info->fd);
+	socket->callback(socket->ctx, client->addr, client->fd);
 
 	if (socket->use_threads) pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
 	/* tidy up */
 	pthread_rwlock_wrlock(&socket->client_lock);
-	for (c = &(socket->clients); *c && *c != info; c = &((*c)->next));
+	for (c = &(socket->clients); *c && *c != client; c = &((*c)->next));
 	if (*c) { /* this should always be true... otherwise we failed to find ourself */
 		/* unlink this client from the chain */
-		*c = info->next;
+		*c = client->next;
 	}
-	info->next = NULL;
+	client->next = NULL;
 	pthread_rwlock_unlock(&socket->client_lock);
 	
 	/* destroy this client */
-	shutdown(info->fd, SHUT_RDWR);
-	close(info->fd);
-	free(info);
+	shutdown(client->fd, SHUT_RDWR);
+	close(client->fd);
+	free(client);
 
 	return NULL;
 }
 
 void ms_client_prepare(struct ms_handle *socket, const char *addr, size_t addrlen, int fd) {
-	struct ms_client *info, **c;
-	size_t infolen;
+	struct ms_client *client, **c;
+	size_t clientlen;
 
-	infolen = sizeof(*info) + (sizeof(char) * (addrlen + 1));
+	clientlen = sizeof(*client) + (sizeof(char) * (addrlen + 1));
 
-	if ((info = malloc(infolen)) == NULL) return;
-	memset(info, 0, infolen);
-	info->fd = fd;
-	info->parent = socket;
-	info->addrlen = addrlen;
-	strncpy(info->addr, addr, addrlen);
-	info->addr[addrlen] = '\0';
+	if ((client = malloc(clientlen)) == NULL) return;
+	memset(client, 0, clientlen);
+	client->fd = fd;
+	client->parent = socket;
+	client->addrlen = addrlen;
+	strncpy(client->addr, addr, addrlen);
+	client->addr[addrlen] = '\0';
 
 	pthread_rwlock_wrlock(&socket->client_lock);
 	for (c = &(socket->clients); *c; c = &((*c)->next));
-	*c = info;
+	*c = client;
 	pthread_rwlock_unlock(&socket->client_lock);
 
-	if (socket->use_threads && pthread_create(&info->tid, NULL, (void*(*)(void*))ms_client, info) == 0) {
+	if (socket->use_threads && pthread_create(&client->tid, NULL, (void*(*)(void*))ms_client, client) == 0) {
 		/* all threads are created and immediately detached */
-		pthread_detach(info->tid);
+		pthread_detach(client->tid);
 	} else { /* if not using threads, or creation of thread failed... */
-		ms_client(info);
+		ms_client(client);
 	}
 }
 
