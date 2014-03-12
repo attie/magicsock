@@ -32,11 +32,11 @@
 #include <pthread.h>
 
 enum ms_type {
-	_MS_TYPE_UNKNOWN_ = 0,
+	MS_TYPE_UNKNOWN = 0,
 	MS_TYPE_TCP,
 	MS_TYPE_UDP,
 	MS_TYPE_NAMED,
-	_MS_TYPE_EOL_
+	__MS_TYPE_MAX__
 };
 
 struct ms_client {
