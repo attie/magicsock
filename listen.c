@@ -138,6 +138,6 @@ void *ms_listen(struct ms_handle *socket) {
 	/* shouldn't really get here...... */
 
 die:
-	if (!socket->stopping) ms_stop(socket);
+	if (!socket->stopping) _ms_stop(socket, 0);
 	return NULL;
 }

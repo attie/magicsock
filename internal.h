@@ -55,8 +55,9 @@ struct ms_handle {
 
 	void *ctx;
 	ms_callback *callback;
-	int use_threads;
-	int stopping;
+	int use_threads : 1;
+	int stopping    : 1;
+	int stopped     : 1;
 
 	union {
 		int listen_port;
@@ -71,6 +72,8 @@ struct ms_handle {
 };
 
 void *ms_listen(struct ms_handle *socket);
+
+int _ms_stop(struct ms_handle *socket, int dofree);
 
 #endif /* INTERNAL_H */
 

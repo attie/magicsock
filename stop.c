@@ -24,39 +24,52 @@
 
 #include "internal.h"
 
-int ms_stop(struct ms_handle *socket) {
-	socket->stopping = 1;
+int _ms_stop(struct ms_handle *socket, int dofree) {
+	if (socket->stopping && !socket->stopped) return -1;
 
-	shutdown(socket->fd, SHUT_RDWR);
-	close(socket->fd);
+	if (!socket->stopping) {
+		socket->stopping = 1;
 
-	pthread_rwlock_wrlock(&socket->client_lock);
+		shutdown(socket->fd, SHUT_RDWR);
+		close(socket->fd);
 
-	while (socket->clients != NULL) {
-		struct ms_client *c = socket->clients;
-		socket->clients = c->next;
+		pthread_rwlock_wrlock(&socket->client_lock);
 
-		if (socket->use_threads) {
-			if (pthread_cancel(c->tid) != 0) {
+		while (socket->clients != NULL) {
+			struct ms_client *c = socket->clients;
+			socket->clients = c->next;
+
+			if (socket->use_threads) {
+				if (pthread_cancel(c->tid) != 0) {
 #warning TODO - this may require some re-work
-				printf("magicsock: error killing thread %p\n", (void*)c->tid);
-				continue;
+					printf("magicsock: error killing thread %p\n", (void*)c->tid);
+					continue;
+				}
 			}
+			shutdown(c->fd, SHUT_RDWR);
+			close(c->fd);
+			socket->clients = c->next;
+			free(c);
 		}
-		shutdown(c->fd, SHUT_RDWR);
-		close(c->fd);
-		socket->clients = c->next;
-		free(c);
+
+		pthread_rwlock_unlock(&socket->client_lock);
 	}
 
-	pthread_rwlock_unlock(&socket->client_lock);
-	pthread_rwlock_destroy(&socket->client_lock);
+	socket->stopped = 1;
 
-	if (socket->type == MS_TYPE_NAMED) {
-		unlink(socket->listen_path);
-		free(socket->listen_path);
+	if (dofree) {
+		pthread_rwlock_destroy(&socket->client_lock);
+
+		if (socket->type == MS_TYPE_NAMED) {
+			unlink(socket->listen_path);
+			free(socket->listen_path);
+		}
+		free(socket);
 	}
-	free(socket);
+
 	return 0;
 }
 
+EXPORT int ms_stop(struct ms_handle *socket) {
+	return _ms_stop(socket, 1);
+}
